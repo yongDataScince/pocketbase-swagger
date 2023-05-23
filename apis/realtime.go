@@ -26,7 +26,26 @@ func bindRealtimeApi(app core.App, rg *echo.Group) {
 	api := realtimeApi{app: app}
 
 	subGroup := rg.Group("/realtime", ActivityLogger(app))
+	// @Summary Установить соединение в реальном времени
+	// @Description Устанавливает соединение в реальном времени
+	// @Tags Realtime
+	// @Security AdminAuth
+	// @Success 200 "Соединение установлено"
+	// @Failure 400 {object} ErrorResponse
+	// @Router /realtime [get]
 	subGroup.GET("", api.connect)
+
+	// @Summary Установить подписки в реальном времени
+	// @Description Устанавливает подписки для клиента в реальном времени
+	// @Tags Realtime
+	// @Security AdminAuth
+	// @Accept json
+	// @Param body body RealtimeSubscribeForm true "Данные подписок"
+	// @Success 204 "Подписки успешно установлены"
+	// @Failure 400 {object} ErrorResponse
+	// @Failure 403 {object} ErrorResponse
+	// @Failure 404 {object} ErrorResponse
+	// @Router /realtime [post]
 	subGroup.POST("", api.setSubscriptions)
 
 	api.bindEvents()
