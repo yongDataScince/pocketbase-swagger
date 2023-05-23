@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -14,6 +15,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tools/search"
+	"github.com/pocketbase/pocketbase/tools/store"
 )
 
 const expandQueryParam = "expand"
@@ -28,70 +30,10 @@ func bindRecordCrudApi(app core.App, rg *echo.Group) {
 		ActivityLogger(app),
 	)
 
-	//	@Summary		Получение списка записей
-	//	@Description	Возвращает список записей из указанной коллекции
-	//	@Tags			Record
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	RecordListResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/records [get]
 	subGroup.GET("/records", api.list, LoadCollectionContext(app))
-	//	@Summary		Просмотр записи
-	//	@Description	Возвращает информацию о указанной записи из указанной коллекции
-	//	@Tags			Record
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Param			id			path		string	true	"Идентификатор записи"
-	//	@Success		200			{object}	RecordResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/records/{id} [get]
 	subGroup.GET("/records/:id", api.view, LoadCollectionContext(app))
-	//	@Summary		Создание записи
-	//	@Description	Создает новую запись в указанной коллекции
-	//	@Tags			Record
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string				true	"Идентификатор коллекции"
-	//	@Param			body		body		CreateRecordRequest	true	"Данные для создания записи"
-	//	@Success		201			{object}	CreateRecordResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/records [post]
 	subGroup.POST("/records", api.create, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
-	//	@Summary		Обновление записи
-	//	@Description	Обновляет информацию о указанной записи в указанной коллекции
-	//	@Tags			Record
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string				true	"Идентификатор коллекции"
-	//	@Param			id			path		string				true	"Идентификатор записи"
-	//	@Param			body		body		UpdateRecordRequest	true	"Данные для обновления записи"
-	//	@Success		200			{object}	UpdateRecordResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/records/{id} [patch]
 	subGroup.PATCH("/records/:id", api.update, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
-	//	@Summary		Удаление записи
-	//	@Description	Удаляет указанную запись из указанной коллекции
-	//	@Tags			Record
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Param			id			path		string	true	"Идентификатор записи"
-	//	@Success		200			{object}	SuccessResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/records/{id} [delete]
 	subGroup.DELETE("/records/:id", api.delete, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
 }
 
@@ -99,6 +41,67 @@ type recordApi struct {
 	app core.App
 }
 
+// swagger:models CreateRecordRequest
+type CreateRecordRequest struct {
+	app          core.App
+	dao          *daos.Dao
+	manageAccess bool
+	record       struct {
+		isNotNew bool
+
+		Id      string `db:"id" json:"id"`
+		Created struct {
+			t time.Time
+		} `db:"created" json:"created"`
+		Updated struct {
+			t time.Time
+		} `db:"updated" json:"updated"`
+
+		collection *Collection
+
+		exportUnknown         bool // whether to export unknown fields
+		ignoreEmailVisibility bool // whether to ignore the emailVisibility flag for auth collections
+		loaded                bool
+		originalData          map[string]any    // the original (aka. first loaded) model data
+		expand                *store.Store[any] // expanded relations
+		data                  *store.Store[any] // any custom data in addition to the base model fields
+	}
+
+	filesToUpload map[string][]struct {
+		Name         string
+		OriginalName string
+		Size         int64
+	}
+	filesToDelete []string // names list
+
+	// base model fields
+	Id string `json:"id"`
+
+	// auth collection fields
+	// ---
+	Username        string `json:"username"`
+	Email           string `json:"email"`
+	EmailVisibility bool   `json:"emailVisibility"`
+	Verified        bool   `json:"verified"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
+	OldPassword     string `json:"oldPassword"`
+	// ---
+
+	data map[string]any
+}
+
+//	@Summary		Получение списка записей
+//	@Description	Возвращает список записей из указанной коллекции
+//	@Tags			Record
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"Получение списка записей успешно"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/records [get]
 func (api *recordApi) list(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -154,6 +157,18 @@ func (api *recordApi) list(c echo.Context) error {
 	})
 }
 
+//	@Summary		Просмотр записи
+//	@Description	Возвращает информацию о указанной записи из указанной коллекции
+//	@Tags			Record
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Param			id			path	string	true	"Идентификатор записи"
+//	@Success		200			"Просмотр записи успешен"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/records/{id} [get]
 func (api *recordApi) view(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -204,6 +219,18 @@ func (api *recordApi) view(c echo.Context) error {
 	})
 }
 
+//	@Summary		Создание записи
+//	@Description	Создает новую запись в указанной коллекции
+//	@Tags			Record
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string				true	"Идентификатор коллекции"
+//	@Param			body		body	CreateRecordRequest	true	"Данные для создания записи"
+//	@Success		201			"Создание записи успешно"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/records [post]
 func (api *recordApi) create(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -307,6 +334,19 @@ func (api *recordApi) create(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Обновление записи
+//	@Description	Обновляет информацию о указанной записи в указанной коллекции
+//	@Tags			Record
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string				true	"Идентификатор коллекции"
+//	@Param			id			path	string				true	"Идентификатор записи"
+//	@Param			body		body	CreateRecordRequest	true	"Данные для обновления записи"
+//	@Success		200			"Обновление записи успешно"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/records/{id} [patch]
 func (api *recordApi) update(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -396,6 +436,18 @@ func (api *recordApi) update(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Удаление записи
+//	@Description	Удаляет указанную запись из указанной коллекции
+//	@Tags			Record
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Param			id			path	string	true	"Идентификатор записи"
+//	@Success		200			"Удаление записи успешно"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/records/{id} [delete]
 func (api *recordApi) delete(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {

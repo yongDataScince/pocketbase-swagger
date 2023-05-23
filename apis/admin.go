@@ -3,14 +3,17 @@ package apis
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/search"
+	"github.com/pocketbase/pocketbase/tools/types"
 
 	// "github.com/swaggo/echo-swagger"
 	_ "github.com/swaggo/echo-swagger/example/docs"
@@ -21,109 +24,15 @@ func bindAdminApi(app core.App, rg *echo.Group) {
 	api := adminApi{app: app}
 
 	subGroup := rg.Group("/admins", ActivityLogger(app))
-	// ShowAccount godoc
-	//	@Summary		Аутентификация администратора с использованием пароля
-	//	@Description	Выполняет аутентификацию администратора с использованием пароля
-	//	@Tags			Admin
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			adminLogin	body			forms.AdminLogin	true	"Данные аутентификации администратора"
-	//	@Success		200			"No Content"	AuthResponse
-	//	@Failure		400			{object}		error
-	//	@Router			/admins/auth-with-password [post]
+
 	subGroup.POST("/auth-with-password", api.authWithPassword)
-
-	//	@Summary		Запрос на сброс пароля администратора
-	//	@Description	Отправляет запрос на сброс пароля администратора
-	//	@Tags			Admin
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			passwordResetRequest	body	AdminPasswordResetRequestForm	true	"Данные запроса на сброс пароля администратора"
-	//	@Success		204						"No Content"
-	//	@Failure		400						{object}	ErrorResponse
-	//	@Router			/admins/request-password-reset [post]
 	subGroup.POST("/request-password-reset", api.requestPasswordReset)
-
-	//	@Summary		Подтверждение сброса пароля администратора
-	//	@Description	Подтверждает сброс пароля администратора
-	//	@Tags			Admin
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			passwordResetConfirm	body	AdminPasswordResetConfirmForm	true	"Данные подтверждения сброса пароля администратора"
-	//	@Success		204						"No Content"
-	//	@Failure		400						{object}	ErrorResponse
-	//	@Router			/admins/confirm-password-reset [post]
 	subGroup.POST("/confirm-password-reset", api.confirmPasswordReset)
-
-	//	@Summary		Обновление авторизации администратора
-	//	@Description	Обновляет токен авторизации администратора
-	//	@Tags			Admin
-	//	@Security		AdminAuth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Success		200	{object}	AuthResponse
-	//	@Failure		401	{object}	ErrorResponse
-	//	@Router			/admins/auth-refresh [post]
 	subGroup.POST("/auth-refresh", api.authRefresh, RequireAdminAuth())
-
-	//	@Summary		Получение списка администраторов
-	//	@Description	Возвращает список администраторов с возможностью поиска и сортировки
-	//	@Tags			Admin
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			id		query		string	false	"Идентификатор администратора"
-	//	@Param			created	query		string	false	"Дата создания администратора"
-	//	@Param			updated	query		string	false	"Дата обновления администратора"
-	//	@Param			name	query		string	false	"Имя администратора"
-	//	@Param			email	query		string	false	"Email администратора"
-	//	@Success		200		{array}		Admin
-	//	@Failure		400		{object}	ErrorResponse
-	//	@Router			/admins [get]
 	subGroup.GET("", api.list, RequireAdminAuth())
-
-	//	@Summary		Создание администратора
-	//	@Description	Создает нового администратора
-	//	@Tags			Admin
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			admin	body		AdminCreateForm	true	"Данные для создания администратора"
-	//	@Success		200		{object}	Admin
-	//	@Failure		400		{object}	ErrorResponse
-	//	@Router			/admins [post]
 	subGroup.POST("", api.create, RequireAdminAuthOnlyIfAny(app))
-
-	//	@Summary		Просмотр администратора
-	//	@Description	Возвращает информацию об указанном администраторе по его идентификатору
-	//	@Tags			Admin
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			id	path		string	true	"Идентификатор администратора"
-	//	@Success		200	{object}	Admin
-	//	@Failure		404	{object}	ErrorResponse
-	//	@Router			/admins/{id} [get]
 	subGroup.GET("/:id", api.view, RequireAdminAuth())
-
-	//	@Summary		Обновление администратора
-	//	@Description	Обновляет информацию об указанном администраторе по его идентификатору
-	//	@Tags			Admin
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			id		path		string			true	"Идентификатор администратора"
-	//	@Param			admin	body		AdminUpdateForm	true	"Данные для обновления администратора"
-	//	@Success		200		{object}	Admin
-	//	@Failure		400		{object}	ErrorResponse
-	//	@Failure		404		{object}	ErrorResponse
-	//	@Router			/admins/{id} [patch]
 	subGroup.PATCH("/:id", api.update, RequireAdminAuth())
-
-	//	@Summary		Удаление администратора
-	//	@Description	Удаляет указанного администратора по его идентификатору
-	//	@Tags			Admin
-	//	@Produce		plain
-	//	@Param			id	path	string	true	"Идентификатор администратора"
-	//	@Success		204	"No Content"
-	//	@Failure		404	{object}	ErrorResponse
-	//	@Router			/admins/{id} [delete]
 	subGroup.DELETE("/:id", api.delete, RequireAdminAuth())
 }
 
@@ -150,6 +59,14 @@ func (api *adminApi) authResponse(c echo.Context, admin *models.Admin) error {
 	})
 }
 
+//	@Summary		Admin Authentication Refresh
+//	@Description	Refreshes the admin authentication.
+//	@Tags			Admin
+//	@Produce		json
+//	@Param			Authorization	header		string	true	"Access token"
+//	@Success		200				{string}	string	"Successful operation"
+//	@Failure		404				{string}	string	"Missing auth admin context"
+//	@Router			/admins/auth-refresh [post]
 func (api *adminApi) authRefresh(c echo.Context) error {
 	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
 	if admin == nil {
@@ -173,6 +90,91 @@ func (api *adminApi) authRefresh(c echo.Context) error {
 	return handlerErr
 }
 
+// swagger:forms AdminLogin
+type AdminLogin struct {
+	app core.App
+	dao *daos.Dao
+
+	Identity string `form:"identity" json:"identity"`
+	Password string `form:"password" json:"password"`
+}
+
+// swagger:forms AdminPasswordResetRequest
+type AdminPasswordResetRequest struct {
+	app             core.App
+	dao             *daos.Dao
+	resendThreshold float64 // in seconds
+
+	Email string `form:"email" json:"email"`
+}
+
+// swagger:forms AdminPasswordResetConfirm
+type AdminPasswordResetConfirm struct {
+	app core.App
+	dao *daos.Dao
+
+	Token           string `form:"token" json:"token"`
+	Password        string `form:"password" json:"password"`
+	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
+}
+
+// swagger:forms Admin
+type Admin struct {
+	isNotNew bool
+
+	Id      string `db:"id" json:"id"`
+	Created struct {
+		t time.Time
+	} `db:"created" json:"created"`
+	Updated struct {
+		t time.Time
+	} `db:"updated" json:"updated"`
+
+	Avatar          int            `db:"avatar" json:"avatar"`
+	Email           string         `db:"email" json:"email"`
+	TokenKey        string         `db:"tokenKey" json:"-"`
+	PasswordHash    string         `db:"passwordHash" json:"-"`
+	LastResetSentAt types.DateTime `db:"lastResetSentAt" json:"-"`
+}
+
+// swagger:forms AdminCreateForm
+type AdminCreateForm struct {
+	app   core.App
+	dao   *daos.Dao
+	admin Admin
+
+	Id              string `form:"id" json:"id"`
+	Avatar          int    `form:"avatar" json:"avatar"`
+	Email           string `form:"email" json:"email"`
+	Password        string `form:"password" json:"password"`
+	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
+}
+
+// swagger:forms AdminUpdateForm
+type AdminUpdateForm struct {
+	app   core.App
+	dao   *daos.Dao
+	admin Admin
+
+	Id              string `form:"id" json:"id"`
+	Avatar          int    `form:"avatar" json:"avatar"`
+	Email           string `form:"email" json:"email"`
+	Password        string `form:"password" json:"password"`
+	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
+}
+
+// ShowAccount godoc
+//
+//	@Summary		Аутентификация администратора с использованием пароля
+//	@Description	Выполняет аутентификацию администратора с использованием пароля
+//	@Tags			Admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			adminLogin	body		AdminLogin	true	"Данные аутентификации администратора"
+//	@Success		200			{string}	string		"Successful operation"
+//	@Failure		400			{string}	string		"An error occurred while loading the submitted data."
+//	@Failure		400			{string}	string		"Failed to authenticate."
+//	@Router			/admins/auth-with-password [post]
 func (api *adminApi) authWithPassword(c echo.Context) error {
 	form := forms.NewAdminLogin(api.app)
 	if err := c.Bind(form); err != nil {
@@ -207,6 +209,15 @@ func (api *adminApi) authWithPassword(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Запрос на сброс пароля администратора
+//	@Description	Отправляет запрос на сброс пароля администратора
+//	@Tags			Admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			passwordResetRequest	body	AdminPasswordResetRequest	true	"Данные запроса на сброс пароля администратора"
+//	@Success		204						"No Content"
+//	@Failure		400						{string}	string	"Failed to authenticate."
+//	@Router			/admins/request-password-reset [post]
 func (api *adminApi) requestPasswordReset(c echo.Context) error {
 	form := forms.NewAdminPasswordResetRequest(api.app)
 	if err := c.Bind(form); err != nil {
@@ -253,6 +264,15 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 	return nil
 }
 
+//	@Summary		Подтверждение сброса пароля администратора
+//	@Description	Подтверждает сброс пароля администратора
+//	@Tags			Admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			passwordResetConfirm	body	AdminPasswordResetConfirm	true	"Данные подтверждения сброса пароля администратора"
+//	@Success		204						"No Content"
+//	@Failure		400						{string}	string	"Failed to authenticate."
+//	@Router			/admins/confirm-password-reset [post]
 func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 	form := forms.NewAdminPasswordResetConfirm(api.app)
 	if readErr := c.Bind(form); readErr != nil {
@@ -285,6 +305,19 @@ func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Получение списка администраторов
+//	@Description	Возвращает список администраторов с возможностью поиска и сортировки
+//	@Tags			Admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		query		string	false	"Идентификатор администратора"
+//	@Param			created	query		string	false	"Дата создания администратора"
+//	@Param			updated	query		string	false	"Дата обновления администратора"
+//	@Param			name	query		string	false	"Имя администратора"
+//	@Param			email	query		string	false	"Email администратора"
+//	@Success		200		{array}		Admin
+//	@Failure		400		{string}	string	"Failed to authenticate."
+//	@Router			/admins [get]
 func (api *adminApi) list(c echo.Context) error {
 	fieldResolver := search.NewSimpleFieldResolver(
 		"id", "created", "updated", "name", "email",
@@ -310,6 +343,15 @@ func (api *adminApi) list(c echo.Context) error {
 	})
 }
 
+//	@Summary		Просмотр администратора
+//	@Description	Возвращает информацию об указанном администраторе по его идентификатору
+//	@Tags			Admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Идентификатор администратора"
+//	@Success		200	{object}	Admin
+//	@Failure		400	{string}	string	"Failed to authenticate."
+//	@Router			/admins/{id} [get]
 func (api *adminApi) view(c echo.Context) error {
 	id := c.PathParam("id")
 	if id == "" {
@@ -330,6 +372,15 @@ func (api *adminApi) view(c echo.Context) error {
 	})
 }
 
+//	@Summary		Создание администратора
+//	@Description	Создает нового администратора
+//	@Tags			Admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			admin	body		AdminCreateForm	true	"Данные для создания администратора"
+//	@Success		200		{object}	Admin
+//	@Failure		400		{string}	string	"Failed to authenticate."
+//	@Router			/admins [post]
 func (api *adminApi) create(c echo.Context) error {
 	admin := &models.Admin{}
 
@@ -368,6 +419,17 @@ func (api *adminApi) create(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Обновление администратора
+//	@Description	Обновляет информацию об указанном администраторе по его идентификатору
+//	@Tags			Admin
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string			true	"Идентификатор администратора"
+//	@Param			admin	body		AdminUpdateForm	true	"Данные для обновления администратора"
+//	@Success		200		{object}	Admin
+//	@Failure		400		{string}	string	"Failed to authenticate."
+//	@Failure		400		{string}	string	"Not found"
+//	@Router			/admins/{id} [patch]
 func (api *adminApi) update(c echo.Context) error {
 	id := c.PathParam("id")
 	if id == "" {
@@ -414,6 +476,14 @@ func (api *adminApi) update(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Удаление администратора
+//	@Description	Удаляет указанного администратора по его идентификатору
+//	@Tags			Admin
+//	@Produce		plain
+//	@Param			id	path	string	true	"Идентификатор администратора"
+//	@Success		204	"No Content"
+//	@Failure		400	{string}	string	"Failed to authenticate."
+//	@Router			/admins/{id} [delete]
 func (api *adminApi) delete(c echo.Context) error {
 	id := c.PathParam("id")
 	if id == "" {

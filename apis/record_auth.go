@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -37,146 +38,17 @@ func bindRecordAuthApi(app core.App, rg *echo.Group) {
 		LoadCollectionContext(app, models.CollectionTypeAuth),
 	)
 
-	//	@Summary		Получить методы аутентификации
-	//	@Description	Возвращает доступные методы аутентификации для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		AdminAuth
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	AuthMethodsResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/auth-methods [get]
 	subGroup.GET("/auth-methods", api.authMethods)
-
-	//	@Summary		Обновить данные аутентификации
-	//	@Description	Обновляет данные аутентификации для указанной записи
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Success		200	{object}	AuthRefreshResponse
-	//	@Failure		404	{object}	ErrorResponse
-	//	@Router			/collections/{collection}/auth-refresh [post]
 	subGroup.POST("/auth-refresh", api.authRefresh, RequireSameContextRecordAuth())
-	//	@Summary		Аутентификация с использованием OAuth2
-	//	@Description	Выполняет аутентификацию с использованием протокола OAuth2 для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	AuthResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/auth-with-oauth2 [post]
 	subGroup.POST("/auth-with-oauth2", api.authWithOAuth2)
-	//	@Summary		Аутентификация с использованием пароля
-	//	@Description	Выполняет аутентификацию с использованием пароля для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	AuthResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/auth-with-password [post]
 	subGroup.POST("/auth-with-password", api.authWithPassword)
-	//	@Summary		Запрос сброса пароля
-	//	@Description	Отправляет запрос на сброс пароля для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	SuccessResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/request-password-reset [post]
 	subGroup.POST("/request-password-reset", api.requestPasswordReset)
-	//	@Summary		Подтверждение сброса пароля
-	//	@Description	Подтверждает сброс пароля для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	SuccessResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/confirm-password-reset [post]
 	subGroup.POST("/confirm-password-reset", api.confirmPasswordReset)
-	//	@Summary		Запрос верификации
-	//	@Description	Отправляет запрос на верификацию для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	SuccessResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/request-verification [post]
 	subGroup.POST("/request-verification", api.requestVerification)
-	//	@Summary		Подтверждение верификации
-	//	@Description	Подтверждает верификацию для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	SuccessResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/confirm-verification [post]
 	subGroup.POST("/confirm-verification", api.confirmVerification)
-	//	@Summary		Запрос изменения электронной почты
-	//	@Description	Отправляет запрос на изменение электронной почты для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	SuccessResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/request-email-change [post]
 	subGroup.POST("/request-email-change", api.requestEmailChange, RequireSameContextRecordAuth())
-	//	@Summary		Подтверждение изменения электронной почты
-	//	@Description	Подтверждает изменение электронной почты для указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Success		200			{object}	SuccessResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/confirm-email-change [post]
 	subGroup.POST("/confirm-email-change", api.confirmEmailChange)
-	//	@Summary		Получение внешних аутентификаций записи
-	//	@Description	Возвращает список внешних аутентификаций для указанной записи в указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Param			id			path		string	true	"Идентификатор записи"
-	//	@Success		200			{object}	[]ExternalAuthResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/records/{id}/external-auths [get]
 	subGroup.GET("/records/:id/external-auths", api.listExternalAuths, RequireAdminOrOwnerAuth("id"))
-	//	@Summary		Отвязывание внешней аутентификации
-	//	@Description	Отвязывает указанную внешнюю аутентификацию от указанной записи в указанной коллекции
-	//	@Tags			Record Auth
-	//	@Security		Auth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path		string	true	"Идентификатор коллекции"
-	//	@Param			id			path		string	true	"Идентификатор записи"
-	//	@Param			provider	path		string	true	"Провайдер внешней аутентификации"
-	//	@Success		200			{object}	SuccessResponse
-	//	@Failure		400			{object}	ErrorResponse
-	//	@Failure		404			{object}	ErrorResponse
-	//	@Router			/collections/{collection}/records/{id}/external-auths/{provider} [delete]
 	subGroup.DELETE("/records/:id/external-auths/:provider", api.unlinkExternalAuth, RequireAdminOrOwnerAuth("id"))
 }
 
@@ -184,6 +56,31 @@ type recordAuthApi struct {
 	app core.App
 }
 
+// swagger:models ExternalAuthResponse
+type ExternalAuthResponse struct {
+	isNotNew bool
+
+	Id      string `db:"id" json:"id"`
+	Created struct {
+		t time.Time
+	} `db:"created" json:"created"`
+	Updated struct {
+		t time.Time
+	} `db:"updated" json:"updated"`
+
+	CollectionId string `db:"collectionId" json:"collectionId"`
+	RecordId     string `db:"recordId" json:"recordId"`
+	Provider     string `db:"provider" json:"provider"`
+	ProviderId   string `db:"providerId" json:"providerId"`
+}
+
+//	@Summary		Обновить данные аутентификации
+//	@Description	Обновляет данные аутентификации для указанной записи
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Success		200	"данные аутентификации успешно обновленны"
+//	@Failure		404	{string}	string	"Not found."
+//	@Router			/collections/{collection}/auth-refresh [post]
 func (api *recordAuthApi) authRefresh(c echo.Context) error {
 	record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
 	if record == nil {
@@ -217,6 +114,14 @@ type providerInfo struct {
 	AuthUrl             string `json:"authUrl"`
 }
 
+//	@Summary		Получить методы аутентификации
+//	@Description	Возвращает доступные методы аутентификации для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		AdminAuth
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"методы аутентификации успешно получены"
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/auth-methods [get]
 func (api *recordAuthApi) authMethods(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -290,6 +195,17 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
+//	@Summary		Аутентификация с использованием OAuth2
+//	@Description	Выполняет аутентификацию с использованием протокола OAuth2 для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"аутентификация с использованием OAuth2 успешна"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/auth-with-oauth2 [post]
 func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -395,6 +311,17 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Аутентификация с использованием пароля
+//	@Description	Выполняет аутентификацию с использованием пароля для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"Аутентификация с использованием пароля успешна"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/auth-with-password [post]
 func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -435,6 +362,17 @@ func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Запрос сброса пароля
+//	@Description	Отправляет запрос на сброс пароля для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"Запрос сброса пароля успешнен"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/request-password-reset [post]
 func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -492,6 +430,17 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 	return nil
 }
 
+//	@Summary		Подтверждение сброса пароля
+//	@Description	Подтверждает сброс пароля для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"Подтверждение сброса пароля успешно"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/confirm-password-reset [post]
 func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -530,6 +479,17 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Запрос верификации
+//	@Description	Отправляет запрос на верификацию для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"Запрос верификации успешен"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/request-verification [post]
 func (api *recordAuthApi) requestVerification(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -582,6 +542,17 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 	return nil
 }
 
+//	@Summary		Подтверждение верификации
+//	@Description	Подтверждает верификацию для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"Подтверждение верификации успешно"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/confirm-verification [post]
 func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -620,6 +591,17 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Запрос изменения электронной почты
+//	@Description	Отправляет запрос на изменение электронной почты для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"Запрос изменения электронной почты успешен"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/request-email-change [post]
 func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -660,6 +642,17 @@ func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Подтверждение изменения электронной почты
+//	@Description	Подтверждает изменение электронной почты для указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Success		200			"Подтверждение изменения электронной почты успешно"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/confirm-email-change [post]
 func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -698,6 +691,18 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Получение внешних аутентификаций записи
+//	@Description	Возвращает список внешних аутентификаций для указанной записи в указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path		string	true	"Идентификатор коллекции"
+//	@Param			id			path		string	true	"Идентификатор записи"
+//	@Success		200			{array}		[]ExternalAuthResponse
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/records/{id}/external-auths [get]
 func (api *recordAuthApi) listExternalAuths(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
@@ -730,6 +735,19 @@ func (api *recordAuthApi) listExternalAuths(c echo.Context) error {
 	})
 }
 
+//	@Summary		Отвязывание внешней аутентификации
+//	@Description	Отвязывает указанную внешнюю аутентификацию от указанной записи в указанной коллекции
+//	@Tags			Record Auth
+//	@Security		Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Идентификатор коллекции"
+//	@Param			id			path	string	true	"Идентификатор записи"
+//	@Param			provider	path	string	true	"Провайдер внешней аутентификации"
+//	@Success		200			"Отвязывание внешней аутентификации успешно"
+//	@Failure		400			{string}	string	"Failed to authenticate."
+//	@Failure		404			{string}	string	"Not found."
+//	@Router			/collections/{collection}/records/{id}/external-auths/{provider} [delete]
 func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {

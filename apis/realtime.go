@@ -26,26 +26,8 @@ func bindRealtimeApi(app core.App, rg *echo.Group) {
 	api := realtimeApi{app: app}
 
 	subGroup := rg.Group("/realtime", ActivityLogger(app))
-	//	@Summary		Установить соединение в реальном времени
-	//	@Description	Устанавливает соединение в реальном времени
-	//	@Tags			Realtime
-	//	@Security		AdminAuth
-	//	@Success		200	"Соединение установлено"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Router			/realtime [get]
-	subGroup.GET("", api.connect)
 
-	//	@Summary		Установить подписки в реальном времени
-	//	@Description	Устанавливает подписки для клиента в реальном времени
-	//	@Tags			Realtime
-	//	@Security		AdminAuth
-	//	@Accept			json
-	//	@Param			body	body	RealtimeSubscribeForm	true	"Данные подписок"
-	//	@Success		204		"Подписки успешно установлены"
-	//	@Failure		400		{object}	ErrorResponse
-	//	@Failure		403		{object}	ErrorResponse
-	//	@Failure		404		{object}	ErrorResponse
-	//	@Router			/realtime [post]
+	subGroup.GET("", api.connect)
 	subGroup.POST("", api.setSubscriptions)
 
 	api.bindEvents()
@@ -55,6 +37,13 @@ type realtimeApi struct {
 	app core.App
 }
 
+//	@Summary		Установить соединение в реальном времени
+//	@Description	Устанавливает соединение в реальном времени
+//	@Tags			Realtime
+//	@Security		AdminAuth
+//	@Success		200	"Соединение установлено"
+//	@Failure		400	{string}	string	"Failed to authenticate."
+//	@Router			/realtime [get]
 func (api *realtimeApi) connect(c echo.Context) error {
 	cancelCtx, cancelRequest := context.WithCancel(c.Request().Context())
 	defer cancelRequest()
@@ -177,7 +166,23 @@ func (api *realtimeApi) connect(c echo.Context) error {
 	}
 }
 
-// note: in case of reconnect, clients will have to resubmit all subscriptions again
+// swagger:models RealtimeSubscribeForm
+type RealtimeSubscribeForm struct {
+	ClientId      string   `form:"clientId" json:"clientId"`
+	Subscriptions []string `form:"subscriptions" json:"subscriptions"`
+}
+
+//	@Summary		Установить подписки в реальном времени
+//	@Description	Устанавливает подписки для клиента в реальном времени
+//	@Tags			Realtime
+//	@Security		AdminAuth
+//	@Accept			json
+//	@Param			body	body	RealtimeSubscribeForm	true	"Данные подписок"
+//	@Success		204		"Подписки успешно установлены"
+//	@Failure		400		{string}	string	"Failed to authenticate."
+//	@Failure		403		{string}	string	"Not exists."
+//	@Failure		404		{string}	string	"Not found."
+//	@Router			/realtime [post]
 func (api *realtimeApi) setSubscriptions(c echo.Context) error {
 	form := forms.NewRealtimeSubscribe()
 

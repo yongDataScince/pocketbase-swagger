@@ -16,6 +16,23 @@ import (
 	"github.com/spf13/cast"
 )
 
+// swagger:models BackupFileInfo
+type BackupFileInfo struct {
+	Key      string `json:"key"`
+	Size     int64  `json:"size"`
+	Modified struct {
+		t time.Time
+	} `json:"modified"`
+}
+
+// swagger:models BackupCreateRequest
+type BackupCreateRequest struct {
+	app core.App
+	ctx context.Context
+
+	Name string `form:"name" json:"name"`
+}
+
 // bindBackupApi registers the file api endpoints and the corresponding handlers.
 //
 //	@todo	add hooks once the app hooks api restructuring is finalized
@@ -23,57 +40,11 @@ func bindBackupApi(app core.App, rg *echo.Group) {
 	api := backupApi{app: app}
 
 	subGroup := rg.Group("/backups", ActivityLogger(app))
-	//	@Summary		Получение списка резервных копий
-	//	@Description	Возвращает список доступных резервных копий
-	//	@Tags			Backups
-	//	@Produce		json
-	//	@Security		AdminAuth
-	//	@Success		200	{array}		BackupFileInfo
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Router			/backups [get]
+
 	subGroup.GET("", api.list, RequireAdminAuth())
-
-	//	@Summary		Создание резервной копии
-	//	@Description	Создает новую резервную копию
-	//	@Tags			Backups
-	//	@Accept			json
-	//	@Param			body	body	BackupCreateRequest	true	"Данные для создания резервной копии"
-	//	@Security		AdminAuth
-	//	@Success		204	"No Content"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Router			/backups [post]
 	subGroup.POST("", api.create, RequireAdminAuth())
-
-	//	@Summary		Загрузка резервной копии
-	//	@Description	Загружает резервную копию по указанному ключу
-	//	@Tags			Backups
-	//	@Param			key		path	string	true	"Ключ резервной копии"
-	//	@Param			token	query	string	true	"Токен доступа"
-	//	@Security		AdminAuth
-	//	@Success		200	"OK"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Failure		403	{object}	ErrorResponse
-	//	@Router			/backups/{key} [get]
 	subGroup.GET("/:key", api.download)
-
-	//	@Summary		Удаление резервной копии
-	//	@Description	Удаляет резервную копию по указанному ключу
-	//	@Tags			Backups
-	//	@Param			key	path	string	true	"Ключ резервной копии"
-	//	@Security		AdminAuth
-	//	@Success		204	"No Content"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Router			/backups/{key} [delete]
 	subGroup.DELETE("/:key", api.delete, RequireAdminAuth())
-
-	//	@Summary		Восстановление резервной копии
-	//	@Description	Запускает процесс восстановления резервной копии по указанному ключу
-	//	@Tags			Backups
-	//	@Param			key	path	string	true	"Ключ резервной копии"
-	//	@Security		AdminAuth
-	//	@Success		204	"No Content"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Router			/backups/{key}/restore [post]
 	subGroup.POST("/:key/restore", api.restore, RequireAdminAuth())
 }
 
@@ -81,6 +52,14 @@ type backupApi struct {
 	app core.App
 }
 
+//	@Summary		Получение списка резервных копий
+//	@Description	Возвращает список доступных резервных копий
+//	@Tags			Backups
+//	@Produce		json
+//	@Security		AdminAuth
+//	@Success		200	{array}		BackupFileInfo
+//	@Failure		400	{string}	string	"Failed to authenticate."
+//	@Router			/backups [get]
 func (api *backupApi) list(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -113,6 +92,15 @@ func (api *backupApi) list(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
+//	@Summary		Создание резервной копии
+//	@Description	Создает новую резервную копию
+//	@Tags			Backups
+//	@Accept			json
+//	@Param			body	body	BackupCreateRequest	true	"Данные для создания резервной копии"
+//	@Security		AdminAuth
+//	@Success		204	"No Content"
+//	@Failure		400	{string}	string	"Failed to authenticate."
+//	@Router			/backups [post]
 func (api *backupApi) create(c echo.Context) error {
 	if api.app.Cache().Has(core.CacheKeyActiveBackup) {
 		return NewBadRequestError("Try again later - another backup/restore process has already been started", nil)
@@ -136,6 +124,16 @@ func (api *backupApi) create(c echo.Context) error {
 	})
 }
 
+//	@Summary		Загрузка резервной копии
+//	@Description	Загружает резервную копию по указанному ключу
+//	@Tags			Backups
+//	@Param			key		path	string	true	"Ключ резервной копии"
+//	@Param			token	query	string	true	"Токен доступа"
+//	@Security		AdminAuth
+//	@Success		200	"OK"
+//	@Failure		400	{string}	string	"Failed to authenticate."
+//	@Failure		400	{string}	string	"Not exists."
+//	@Router			/backups/{key} [get]
 func (api *backupApi) download(c echo.Context) error {
 	fileToken := c.QueryParam("token")
 
@@ -174,6 +172,14 @@ func (api *backupApi) download(c echo.Context) error {
 	)
 }
 
+//	@Summary		Восстановление резервной копии
+//	@Description	Запускает процесс восстановления резервной копии по указанному ключу
+//	@Tags			Backups
+//	@Param			key	path	string	true	"Ключ резервной копии"
+//	@Security		AdminAuth
+//	@Success		204	"No Content"
+//	@Failure		400	{string}	string	"Failed to authenticate."
+//	@Router			/backups/{key}/restore [post]
 func (api *backupApi) restore(c echo.Context) error {
 	if api.app.Cache().Has(core.CacheKeyActiveBackup) {
 		return NewBadRequestError("Try again later - another backup/restore process has already been started.", nil)
@@ -213,6 +219,14 @@ func (api *backupApi) restore(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+//	@Summary		Удаление резервной копии
+//	@Description	Удаляет резервную копию по указанному ключу
+//	@Tags			Backups
+//	@Param			key	path	string	true	"Ключ резервной копии"
+//	@Security		AdminAuth
+//	@Success		204	"No Content"
+//	@Failure		400	{string}	string	"Failed to authenticate."
+//	@Router			/backups/{key} [delete]
 func (api *backupApi) delete(c echo.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

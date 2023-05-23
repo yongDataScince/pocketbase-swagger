@@ -3,93 +3,120 @@ package apis
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
+
+// swagger:models CollectionCreateRequest
+type CollectionCreateRequest struct {
+	app        core.App
+	dao        *daos.Dao
+	collection *models.Collection
+
+	Id     string `form:"id" json:"id"`
+	Type   string `form:"type" json:"type"`
+	Name   string `form:"name" json:"name"`
+	System bool   `form:"system" json:"system"`
+	Schema struct {
+		fields []*struct {
+			System   bool   `form:"system" json:"system"`
+			Id       string `form:"id" json:"id"`
+			Name     string `form:"name" json:"name"`
+			Type     string `form:"type" json:"type"`
+			Required bool   `form:"required" json:"required"`
+
+			// Deprecated: This field is no-op and will be removed in future versions.
+			// Please use the collection.Indexes field to define a unique constraint.
+			Unique bool `form:"unique" json:"unique"`
+
+			Options any `form:"options" json:"options"`
+		}
+	} `form:"schema" json:"schema"`
+	Indexes    []string       `form:"indexes" json:"indexes"`
+	ListRule   *string        `form:"listRule" json:"listRule"`
+	ViewRule   *string        `form:"viewRule" json:"viewRule"`
+	CreateRule *string        `form:"createRule" json:"createRule"`
+	UpdateRule *string        `form:"updateRule" json:"updateRule"`
+	DeleteRule *string        `form:"deleteRule" json:"deleteRule"`
+	Options    map[string]any `form:"options" json:"options"`
+}
+
+// swagger:models SearchResult
+type SearchResult struct {
+	Page       int `json:"page"`
+	PerPage    int `json:"perPage"`
+	TotalItems int `json:"totalItems"`
+	TotalPages int `json:"totalPages"`
+	Items      any `json:"items"`
+}
+
+// swagger:models Collection
+type Collection struct {
+	isNotNew bool
+
+	Id      string `db:"id" json:"id"`
+	Created struct {
+		t time.Time
+	} `db:"created" json:"created"`
+	Updated struct {
+		t time.Time
+	} `db:"updated" json:"updated"`
+
+	Name   string `db:"name" json:"name"`
+	Type   string `db:"type" json:"type"`
+	System bool   `db:"system" json:"system"`
+	Schema struct {
+		fields []*struct {
+			System   bool   `form:"system" json:"system"`
+			Id       string `form:"id" json:"id"`
+			Name     string `form:"name" json:"name"`
+			Type     string `form:"type" json:"type"`
+			Required bool   `form:"required" json:"required"`
+
+			// Deprecated: This field is no-op and will be removed in future versions.
+			// Please use the collection.Indexes field to define a unique constraint.
+			Unique bool `form:"unique" json:"unique"`
+
+			Options any `form:"options" json:"options"`
+		}
+	} `db:"schema" json:"schema"`
+	Indexes []string `db:"indexes" json:"indexes"`
+
+	// rules
+	ListRule   *string `db:"listRule" json:"listRule"`
+	ViewRule   *string `db:"viewRule" json:"viewRule"`
+	CreateRule *string `db:"createRule" json:"createRule"`
+	UpdateRule *string `db:"updateRule" json:"updateRule"`
+	DeleteRule *string `db:"deleteRule" json:"deleteRule"`
+
+	Options map[string]any `db:"options" json:"options"`
+}
+
+// swagger:models CollectionsImportRequest
+type CollectionsImportRequest struct {
+	app core.App
+	dao *daos.Dao
+
+	Collections   []Collection `form:"collections" json:"collections"`
+	DeleteMissing bool                 `form:"deleteMissing" json:"deleteMissing"`
+}
 
 // bindCollectionApi registers the collection api endpoints and the corresponding handlers.
 func bindCollectionApi(app core.App, rg *echo.Group) {
 	api := collectionApi{app: app}
 
 	subGroup := rg.Group("/collections", ActivityLogger(app), RequireAdminAuth())
-	//	@Summary		Получить список коллекций
-	//	@Description	Возвращает список коллекций с возможностью фильтрации и сортировки
-	//	@Tags			Collections
-	//	@Param			id		query	string	false	"ID коллекции"
-	//	@Param			created	query	string	false	"Дата создания коллекции в формате ISO8601"
-	//	@Param			updated	query	string	false	"Дата обновления коллекции в формате ISO8601"
-	//	@Param			name	query	string	false	"Название коллекции"
-	//	@Param			system	query	boolean	false	"Системная коллекция"
-	//	@Param			type	query	string	false	"Тип коллекции"
-	//	@Security		AdminAuth
-	//	@Success		200	{object}	SearchResult{Collections}	"OK"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Router			/collections [get]
 	subGroup.GET("", api.list)
-
-	//	@Summary		Создать коллекцию
-	//	@Description	Создает новую коллекцию
-	//	@Tags			Collections
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	body	CollectionCreateRequest	true	"Данные для создания коллекции"
-	//	@Security		AdminAuth
-	//	@Success		200	{object}	Collection	"OK"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Router			/collections [post]
 	subGroup.POST("", api.create)
-
-	//	@Summary		Просмотреть коллекцию
-	//	@Description	Возвращает информацию о коллекции по ее имени или ID
-	//	@Tags			Collections
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path	string	true	"Имя или ID коллекции"
-	//	@Security		AdminAuth
-	//	@Success		200	{object}	Collection	"OK"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Failure		404	{object}	ErrorResponse
-	//	@Router			/collections/{collection} [get]
 	subGroup.GET("/:collection", api.view)
-
-	//	@Summary		Обновить коллекцию
-	//	@Description	Обновляет информацию о коллекции по ее имени или ID
-	//	@Tags			Collections
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			collection	path	string					true	"Имя или ID коллекции"
-	//	@Param			body		body	CollectionUpsertRequest	true	"Данные для обновления коллекции"
-	//	@Security		AdminAuth
-	//	@Success		200	{object}	Collection	"OK"
-	//	@Failure		400	{object}	ErrorResponse
-	//	@Failure		404	{object}	ErrorResponse
-	//	@Router			/collections/{collection} [patch]
 	subGroup.PATCH("/:collection", api.update)
-
-	//	@Summary		Удалить коллекцию
-	//	@Description	Удаляет коллекцию по ее имени или ID
-	//	@Tags			Collections
-	//	@Param			collection	path	string	true	"Имя или ID коллекции"
-	//	@Security		AdminAuth
-	//	@Success		204	"No Content"
-	//	@Failure		404	{object}	ErrorResponse
-	//	@Router			/collections/{collection} [delete]
 	subGroup.DELETE("/:collection", api.delete)
-
-	//	@Summary		Импортировать коллекции
-	//	@Description	Импортирует коллекции из переданных данных
-	//	@Tags			Collections
-	//	@Security		AdminAuth
-	//	@Accept			json
-	//	@Produce		json
-	//	@Param			body	body	CollectionsImportRequest	true	"Данные для импорта коллекций"
-	//	@Success		204		"No Content"
-	//	@Failure		400		{object}	ErrorResponse
-	//	@Router			/collections/import [post]
 	subGroup.PUT("/import", api.bulkImport)
 }
 
@@ -97,6 +124,19 @@ type collectionApi struct {
 	app core.App
 }
 
+//	@Summary		Получить список коллекций
+//	@Description	Возвращает список коллекций с возможностью фильтрации и сортировки
+//	@Tags			Collections
+//	@Param			id		query	string	false	"ID коллекции"
+//	@Param			created	query	string	false	"Дата создания коллекции в формате ISO8601"
+//	@Param			updated	query	string	false	"Дата обновления коллекции в формате ISO8601"
+//	@Param			name	query	string	false	"Название коллекции"
+//	@Param			system	query	boolean	false	"Системная коллекция"
+//	@Param			type	query	string	false	"Тип коллекции"
+//	@Security		AdminAuth
+//	@Success		200	{object}	SearchResult	"OK"
+//	@Failure		400	{string}	string			"Failed to authenticate."
+//	@Router			/collections [get]
 func (api *collectionApi) list(c echo.Context) error {
 	fieldResolver := search.NewSimpleFieldResolver(
 		"id", "created", "updated", "name", "system", "type",
@@ -122,6 +162,17 @@ func (api *collectionApi) list(c echo.Context) error {
 	})
 }
 
+//	@Summary		Просмотреть коллекцию
+//	@Description	Возвращает информацию о коллекции по ее имени или ID
+//	@Tags			Collections
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string	true	"Имя или ID коллекции"
+//	@Security		AdminAuth
+//	@Success		200	{object}	Collection	"OK"
+//	@Failure		400	{string}	string		"Failed to authenticate."
+//	@Failure		404	{string}	string		"Not found."
+//	@Router			/collections/{collection} [get]
 func (api *collectionApi) view(c echo.Context) error {
 	collection, err := api.app.Dao().FindCollectionByNameOrId(c.PathParam("collection"))
 	if err != nil || collection == nil {
@@ -137,6 +188,16 @@ func (api *collectionApi) view(c echo.Context) error {
 	})
 }
 
+//	@Summary		Создать коллекцию
+//	@Description	Создает новую коллекцию
+//	@Tags			Collections
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	body	CollectionCreateRequest	true	"Данные для создания коллекции"
+//	@Security		AdminAuth
+//	@Success		200	{object}	Collection	"OK"
+//	@Failure		400	{string}	string		"Failed to authenticate."
+//	@Router			/collections [post]
 func (api *collectionApi) create(c echo.Context) error {
 	collection := &models.Collection{}
 
@@ -175,6 +236,18 @@ func (api *collectionApi) create(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Обновить коллекцию
+//	@Description	Обновляет информацию о коллекции по ее имени или ID
+//	@Tags			Collections
+//	@Accept			json
+//	@Produce		json
+//	@Param			collection	path	string					true	"Имя или ID коллекции"
+//	@Param			body		body	CollectionCreateRequest	true	"Данные для обновления коллекции"
+//	@Security		AdminAuth
+//	@Success		200	{object}	Collection	"OK"
+//	@Failure		400	{string}	string		"Failed to authenticate."
+//	@Failure		404	{string}	string		"Not found."
+//	@Router			/collections/{collection} [patch]
 func (api *collectionApi) update(c echo.Context) error {
 	collection, err := api.app.Dao().FindCollectionByNameOrId(c.PathParam("collection"))
 	if err != nil || collection == nil {
@@ -216,6 +289,14 @@ func (api *collectionApi) update(c echo.Context) error {
 	return submitErr
 }
 
+//	@Summary		Удалить коллекцию
+//	@Description	Удаляет коллекцию по ее имени или ID
+//	@Tags			Collections
+//	@Param			collection	path	string	true	"Имя или ID коллекции"
+//	@Security		AdminAuth
+//	@Success		204	"No Content"
+//	@Failure		404	{string}	string	"Not found."
+//	@Router			/collections/{collection} [delete]
 func (api *collectionApi) delete(c echo.Context) error {
 	collection, err := api.app.Dao().FindCollectionByNameOrId(c.PathParam("collection"))
 	if err != nil || collection == nil {
@@ -243,6 +324,16 @@ func (api *collectionApi) delete(c echo.Context) error {
 	return handlerErr
 }
 
+//	@Summary		Импортировать коллекции
+//	@Description	Импортирует коллекции из переданных данных
+//	@Tags			Collections
+//	@Security		AdminAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body	CollectionsImportRequest	true	"Данные для импорта коллекций"
+//	@Success		204		"No Content"
+//	@Failure		400		{string}	string	"Failed to authenticate."
+//	@Router			/collections/import [post]
 func (api *collectionApi) bulkImport(c echo.Context) error {
 	form := forms.NewCollectionsImport(api.app)
 
