@@ -28,10 +28,70 @@ func bindRecordCrudApi(app core.App, rg *echo.Group) {
 		ActivityLogger(app),
 	)
 
+	// @Summary Получение списка записей
+	// @Description Возвращает список записей из указанной коллекции
+	// @Tags Record
+	// @Security Auth
+	// @Accept json
+	// @Produce json
+	// @Param collection path string true "Идентификатор коллекции"
+	// @Success 200 {object} RecordListResponse
+	// @Failure 400 {object} ErrorResponse
+	// @Failure 404 {object} ErrorResponse
+	// @Router /collections/{collection}/records [get]
 	subGroup.GET("/records", api.list, LoadCollectionContext(app))
+	// @Summary Просмотр записи
+	// @Description Возвращает информацию о указанной записи из указанной коллекции
+	// @Tags Record
+	// @Security Auth
+	// @Accept json
+	// @Produce json
+	// @Param collection path string true "Идентификатор коллекции"
+	// @Param id path string true "Идентификатор записи"
+	// @Success 200 {object} RecordResponse
+	// @Failure 400 {object} ErrorResponse
+	// @Failure 404 {object} ErrorResponse
+	// @Router /collections/{collection}/records/{id} [get]
 	subGroup.GET("/records/:id", api.view, LoadCollectionContext(app))
+	// @Summary Создание записи
+	// @Description Создает новую запись в указанной коллекции
+	// @Tags Record
+	// @Security Auth
+	// @Accept json
+	// @Produce json
+	// @Param collection path string true "Идентификатор коллекции"
+	// @Param body body CreateRecordRequest true "Данные для создания записи"
+	// @Success 201 {object} CreateRecordResponse
+	// @Failure 400 {object} ErrorResponse
+	// @Failure 404 {object} ErrorResponse
+	// @Router /collections/{collection}/records [post]
 	subGroup.POST("/records", api.create, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+	// @Summary Обновление записи
+	// @Description Обновляет информацию о указанной записи в указанной коллекции
+	// @Tags Record
+	// @Security Auth
+	// @Accept json
+	// @Produce json
+	// @Param collection path string true "Идентификатор коллекции"
+	// @Param id path string true "Идентификатор записи"
+	// @Param body body UpdateRecordRequest true "Данные для обновления записи"
+	// @Success 200 {object} UpdateRecordResponse
+	// @Failure 400 {object} ErrorResponse
+	// @Failure 404 {object} ErrorResponse
+	// @Router /collections/{collection}/records/{id} [patch]
 	subGroup.PATCH("/records/:id", api.update, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+	// @Summary Удаление записи
+	// @Description Удаляет указанную запись из указанной коллекции
+	// @Tags Record
+	// @Security Auth
+	// @Accept json
+	// @Produce json
+	// @Param collection path string true "Идентификатор коллекции"
+	// @Param id path string true "Идентификатор записи"
+	// @Success 200 {object} SuccessResponse
+	// @Failure 400 {object} ErrorResponse
+	// @Failure 404 {object} ErrorResponse
+	// @Router /collections/{collection}/records/{id} [delete]
 	subGroup.DELETE("/records/:id", api.delete, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
 }
 
