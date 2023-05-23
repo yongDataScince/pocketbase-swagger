@@ -28,8 +28,49 @@ func bindFileApi(app core.App, rg *echo.Group) {
 	api := fileApi{app: app}
 
 	subGroup := rg.Group("/files", ActivityLogger(app))
+	// @Summary Генерировать токен файла
+	// @Description Генерирует токен для доступа к файлу
+	// @Tags Files
+	// @Security AdminAuth
+	// @Security RecordAuth
+	// @Produce json
+	// @Success 200 {object} FileTokenResponse
+	// @Failure 400 {object} ErrorResponse
+	// @Router /files/token [post]
 	subGroup.POST("/token", api.fileToken)
+
+	// @Summary Загрузить файл
+	// @Description Загружает файл
+	// @Tags Files
+	// @Security AdminAuth
+	// @Security RecordAuth
+	// @Param collection path string true "Идентификатор коллекции"
+	// @Param recordId path string true "Идентификатор записи"
+	// @Param filename path string true "Имя файла"
+	// @Param token query string false "Токен доступа к файлу"
+	// @Param thumb query string false "Размер эскиза (если применимо)"
+	// @Success 200 "Файл загружен"
+	// @Failure 400 {object} ErrorResponse
+	// @Failure 403 {object} ErrorResponse
+	// @Failure 404 {object} ErrorResponse
+	// @Router /files/{collection}/{recordId}/{filename} [head]
 	subGroup.HEAD("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
+
+	// @Summary Загрузить файл
+	// @Description Загружает файл
+	// @Tags Files
+	// @Security AdminAuth
+	// @Security RecordAuth
+	// @Param collection path string true "Идентификатор коллекции"
+	// @Param recordId path string true "Идентификатор записи"
+	// @Param filename path string true "Имя файла"
+	// @Param token query string false "Токен доступа к файлу"
+	// @Param thumb query string false "Размер эскиза (если применимо)"
+	// @Success 200 "Файл загружен"
+	// @Failure 400 {object} ErrorResponse
+	// @Failure 403 {object} ErrorResponse
+	// @Failure 404 {object} ErrorResponse
+	// @Router /files/{collection}/{recordId}/{filename} [get]
 	subGroup.GET("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 }
 
