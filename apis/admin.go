@@ -21,108 +21,109 @@ func bindAdminApi(app core.App, rg *echo.Group) {
 	api := adminApi{app: app}
 
 	subGroup := rg.Group("/admins", ActivityLogger(app))
-	// @Summary Аутентификация администратора с использованием пароля
-	// @Description Выполняет аутентификацию администратора с использованием пароля
-	// @Tags Admin
-	// @Accept json
-	// @Produce json
-	// @Param adminLogin body AdminLoginForm true "Данные аутентификации администратора"
-	// @Success 200 {object} AuthResponse
-	// @Failure 400 {object} ErrorResponse
-	// @Router /admins/auth-with-password [post]
+	// ShowAccount godoc
+	//	@Summary		Аутентификация администратора с использованием пароля
+	//	@Description	Выполняет аутентификацию администратора с использованием пароля
+	//	@Tags			Admin
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			adminLogin	body			forms.AdminLogin	true	"Данные аутентификации администратора"
+	//	@Success		200			"No Content"	AuthResponse
+	//	@Failure		400			{object}		error
+	//	@Router			/admins/auth-with-password [post]
 	subGroup.POST("/auth-with-password", api.authWithPassword)
 
-	// @Summary Запрос на сброс пароля администратора
-	// @Description Отправляет запрос на сброс пароля администратора
-	// @Tags Admin
-	// @Accept json
-	// @Produce json
-	// @Param passwordResetRequest body AdminPasswordResetRequestForm true "Данные запроса на сброс пароля администратора"
-	// @Success 204 "No Content"
-	// @Failure 400 {object} ErrorResponse
-	// @Router /admins/request-password-reset [post]
+	//	@Summary		Запрос на сброс пароля администратора
+	//	@Description	Отправляет запрос на сброс пароля администратора
+	//	@Tags			Admin
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			passwordResetRequest	body	AdminPasswordResetRequestForm	true	"Данные запроса на сброс пароля администратора"
+	//	@Success		204						"No Content"
+	//	@Failure		400						{object}	ErrorResponse
+	//	@Router			/admins/request-password-reset [post]
 	subGroup.POST("/request-password-reset", api.requestPasswordReset)
 
-	// @Summary Подтверждение сброса пароля администратора
-	// @Description Подтверждает сброс пароля администратора
-	// @Tags Admin
-	// @Accept json
-	// @Produce json
-	// @Param passwordResetConfirm body AdminPasswordResetConfirmForm true "Данные подтверждения сброса пароля администратора"
-	// @Success 204 "No Content"
-	// @Failure 400 {object} ErrorResponse
-	// @Router /admins/confirm-password-reset [post]
+	//	@Summary		Подтверждение сброса пароля администратора
+	//	@Description	Подтверждает сброс пароля администратора
+	//	@Tags			Admin
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			passwordResetConfirm	body	AdminPasswordResetConfirmForm	true	"Данные подтверждения сброса пароля администратора"
+	//	@Success		204						"No Content"
+	//	@Failure		400						{object}	ErrorResponse
+	//	@Router			/admins/confirm-password-reset [post]
 	subGroup.POST("/confirm-password-reset", api.confirmPasswordReset)
 
-	// @Summary Обновление авторизации администратора
-	// @Description Обновляет токен авторизации администратора
-	// @Tags Admin
-	// @Security AdminAuth
-	// @Accept json
-	// @Produce json
-	// @Success 200 {object} AuthResponse
-	// @Failure 401 {object} ErrorResponse
-	// @Router /admins/auth-refresh [post]
+	//	@Summary		Обновление авторизации администратора
+	//	@Description	Обновляет токен авторизации администратора
+	//	@Tags			Admin
+	//	@Security		AdminAuth
+	//	@Accept			json
+	//	@Produce		json
+	//	@Success		200	{object}	AuthResponse
+	//	@Failure		401	{object}	ErrorResponse
+	//	@Router			/admins/auth-refresh [post]
 	subGroup.POST("/auth-refresh", api.authRefresh, RequireAdminAuth())
 
-	// @Summary Получение списка администраторов
-	// @Description Возвращает список администраторов с возможностью поиска и сортировки
-	// @Tags Admin
-	// @Accept json
-	// @Produce json
-	// @Param id query string false "Идентификатор администратора"
-	// @Param created query string false "Дата создания администратора"
-	// @Param updated query string false "Дата обновления администратора"
-	// @Param name query string false "Имя администратора"
-	// @Param email query string false "Email администратора"
-	// @Success 200 {array} Admin
-	// @Failure 400 {object} ErrorResponse
-	// @Router /admins [get]
+	//	@Summary		Получение списка администраторов
+	//	@Description	Возвращает список администраторов с возможностью поиска и сортировки
+	//	@Tags			Admin
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			id		query		string	false	"Идентификатор администратора"
+	//	@Param			created	query		string	false	"Дата создания администратора"
+	//	@Param			updated	query		string	false	"Дата обновления администратора"
+	//	@Param			name	query		string	false	"Имя администратора"
+	//	@Param			email	query		string	false	"Email администратора"
+	//	@Success		200		{array}		Admin
+	//	@Failure		400		{object}	ErrorResponse
+	//	@Router			/admins [get]
 	subGroup.GET("", api.list, RequireAdminAuth())
 
-	// @Summary Создание администратора
-	// @Description Создает нового администратора
-	// @Tags Admin
-	// @Accept json
-	// @Produce json
-	// @Param admin body AdminCreateForm true "Данные для создания администратора"
-	// @Success 200 {object} Admin
-	// @Failure 400 {object} ErrorResponse
-	// @Router /admins [post]
+	//	@Summary		Создание администратора
+	//	@Description	Создает нового администратора
+	//	@Tags			Admin
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			admin	body		AdminCreateForm	true	"Данные для создания администратора"
+	//	@Success		200		{object}	Admin
+	//	@Failure		400		{object}	ErrorResponse
+	//	@Router			/admins [post]
 	subGroup.POST("", api.create, RequireAdminAuthOnlyIfAny(app))
 
-	// @Summary Просмотр администратора
-	// @Description Возвращает информацию об указанном администраторе по его идентификатору
-	// @Tags Admin
-	// @Accept json
-	// @Produce json
-	// @Param id path string true "Идентификатор администратора"
-	// @Success 200 {object} Admin
-	// @Failure 404 {object} ErrorResponse
-	// @Router /admins/{id} [get]
+	//	@Summary		Просмотр администратора
+	//	@Description	Возвращает информацию об указанном администраторе по его идентификатору
+	//	@Tags			Admin
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			id	path		string	true	"Идентификатор администратора"
+	//	@Success		200	{object}	Admin
+	//	@Failure		404	{object}	ErrorResponse
+	//	@Router			/admins/{id} [get]
 	subGroup.GET("/:id", api.view, RequireAdminAuth())
 
-	// @Summary Обновление администратора
-	// @Description Обновляет информацию об указанном администраторе по его идентификатору
-	// @Tags Admin
-	// @Accept json
-	// @Produce json
-	// @Param id path string true "Идентификатор администратора"
-	// @Param admin body AdminUpdateForm true "Данные для обновления администратора"
-	// @Success 200 {object} Admin
-	// @Failure 400 {object} ErrorResponse
-	// @Failure 404 {object} ErrorResponse
-	// @Router /admins/{id} [patch]
+	//	@Summary		Обновление администратора
+	//	@Description	Обновляет информацию об указанном администраторе по его идентификатору
+	//	@Tags			Admin
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			id		path		string			true	"Идентификатор администратора"
+	//	@Param			admin	body		AdminUpdateForm	true	"Данные для обновления администратора"
+	//	@Success		200		{object}	Admin
+	//	@Failure		400		{object}	ErrorResponse
+	//	@Failure		404		{object}	ErrorResponse
+	//	@Router			/admins/{id} [patch]
 	subGroup.PATCH("/:id", api.update, RequireAdminAuth())
 
-	// @Summary Удаление администратора
-	// @Description Удаляет указанного администратора по его идентификатору
-	// @Tags Admin
-	// @Produce plain
-	// @Param id path string true "Идентификатор администратора"
-	// @Success 204 "No Content"
-	// @Failure 404 {object} ErrorResponse
-	// @Router /admins/{id} [delete]
+	//	@Summary		Удаление администратора
+	//	@Description	Удаляет указанного администратора по его идентификатору
+	//	@Tags			Admin
+	//	@Produce		plain
+	//	@Param			id	path	string	true	"Идентификатор администратора"
+	//	@Success		204	"No Content"
+	//	@Failure		404	{object}	ErrorResponse
+	//	@Router			/admins/{id} [delete]
 	subGroup.DELETE("/:id", api.delete, RequireAdminAuth())
 }
 

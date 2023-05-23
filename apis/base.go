@@ -84,7 +84,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 		// send error response
 		hookErr := app.OnBeforeApiError().Trigger(event, func(e *core.ApiErrorEvent) error {
-			// @see https://github.com/labstack/echo/issues/608
+			//	@see	https://github.com/labstack/echo/issues/608
 			if e.HttpContext.Request().Method == http.MethodHead {
 				return e.HttpContext.NoContent(apiErr.Code)
 			}
@@ -144,7 +144,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 // If a file resource is missing and indexFallback is set, the request
 // will be forwarded to the base index.html (useful also for SPA).
 //
-// @see https://github.com/labstack/echo/issues/2211
+//	@see	https://github.com/labstack/echo/issues/2211
 func StaticDirectoryHandler(fileSystem fs.FS, indexFallback bool) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		p := c.PathParam("*")

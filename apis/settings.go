@@ -16,58 +16,58 @@ func bindSettingsApi(app core.App, rg *echo.Group) {
 	api := settingsApi{app: app}
 
 	subGroup := rg.Group("/settings", ActivityLogger(app), RequireAdminAuth())
-	// @Summary Получение списка настроек
-	// @Description Возвращает список всех настроек
-	// @Tags Settings
-	// @Security AdminAuth
-	// @Accept json
-	// @Produce json
-	// @Success 200 {object} SettingsListResponse
-	// @Failure 400 {object} ErrorResponse
-	// @Router /settings [get]
+	//	@Summary		Получение списка настроек
+	//	@Description	Возвращает список всех настроек
+	//	@Tags			Settings
+	//	@Security		AdminAuth
+	//	@Accept			json
+	//	@Produce		json
+	//	@Success		200	{object}	SettingsListResponse
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Router			/settings [get]
 	subGroup.GET("", api.list)
-	// @Summary Обновление настроек
-	// @Description Обновляет указанные настройки
-	// @Tags Settings
-	// @Security AdminAuth
-	// @Accept json
-	// @Produce json
-	// @Param body body UpdateSettingsRequest true "Данные для обновления настроек"
-	// @Success 200 {object} UpdateSettingsResponse
-	// @Failure 400 {object} ErrorResponse
-	// @Router /settings [patch]
+	//	@Summary		Обновление настроек
+	//	@Description	Обновляет указанные настройки
+	//	@Tags			Settings
+	//	@Security		AdminAuth
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			body	body		UpdateSettingsRequest	true	"Данные для обновления настроек"
+	//	@Success		200		{object}	UpdateSettingsResponse
+	//	@Failure		400		{object}	ErrorResponse
+	//	@Router			/settings [patch]
 	subGroup.PATCH("", api.set)
-	// @Summary Тестирование настроек для хранилища S3
-	// @Description Проверяет настройки для хранилища S3
-	// @Tags Settings
-	// @Security AdminAuth
-	// @Accept json
-	// @Produce json
-	// @Param body body TestS3SettingsRequest true "Данные для тестирования настроек S3"
-	// @Success 200 {object} TestS3SettingsResponse
-	// @Failure 400 {object} ErrorResponse
-	// @Router /settings/test/s3 [post]
+	//	@Summary		Тестирование настроек для хранилища S3
+	//	@Description	Проверяет настройки для хранилища S3
+	//	@Tags			Settings
+	//	@Security		AdminAuth
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			body	body		TestS3SettingsRequest	true	"Данные для тестирования настроек S3"
+	//	@Success		200		{object}	TestS3SettingsResponse
+	//	@Failure		400		{object}	ErrorResponse
+	//	@Router			/settings/test/s3 [post]
 	subGroup.POST("/test/s3", api.testS3)
-	// @Summary Тестирование настроек для электронной почты
-	// @Description Проверяет настройки для отправки электронной почты
-	// @Tags Settings
-	// @Security AdminAuth
-	// @Accept json
-	// @Produce json
-	// @Param body body TestEmailSettingsRequest true "Данные для тестирования настроек электронной почты"
-	// @Success 200 {object} TestEmailSettingsResponse
-	// @Failure 400 {object} ErrorResponse
-	// @Router /settings/test/email [post]
+	//	@Summary		Тестирование настроек для электронной почты
+	//	@Description	Проверяет настройки для отправки электронной почты
+	//	@Tags			Settings
+	//	@Security		AdminAuth
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			body	body		TestEmailSettingsRequest	true	"Данные для тестирования настроек электронной почты"
+	//	@Success		200		{object}	TestEmailSettingsResponse
+	//	@Failure		400		{object}	ErrorResponse
+	//	@Router			/settings/test/email [post]
 	subGroup.POST("/test/email", api.testEmail)
-	// @Summary Генерация секретного ключа для авторизации Apple
-	// @Description Генерирует секретный ключ для использования при авторизации Apple
-	// @Tags Settings
-	// @Security AdminAuth
-	// @Accept json
-	// @Produce json
-	// @Success 200 {object} GenerateAppleClientSecretResponse
-	// @Failure 400 {object} ErrorResponse
-	// @Router /settings/apple/generate-client-secret [post]
+	//	@Summary		Генерация секретного ключа для авторизации Apple
+	//	@Description	Генерирует секретный ключ для использования при авторизации Apple
+	//	@Tags			Settings
+	//	@Security		AdminAuth
+	//	@Accept			json
+	//	@Produce		json
+	//	@Success		200	{object}	GenerateAppleClientSecretResponse
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Router			/settings/apple/generate-client-secret [post]
 	subGroup.POST("/apple/generate-client-secret", api.generateAppleClientSecret)
 }
 

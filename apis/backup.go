@@ -18,62 +18,62 @@ import (
 
 // bindBackupApi registers the file api endpoints and the corresponding handlers.
 //
-// @todo add hooks once the app hooks api restructuring is finalized
+//	@todo	add hooks once the app hooks api restructuring is finalized
 func bindBackupApi(app core.App, rg *echo.Group) {
 	api := backupApi{app: app}
 
 	subGroup := rg.Group("/backups", ActivityLogger(app))
-	// @Summary Получение списка резервных копий
-	// @Description Возвращает список доступных резервных копий
-	// @Tags Backups
-	// @Produce json
-	// @Security AdminAuth
-	// @Success 200 {array} BackupFileInfo
-	// @Failure 400 {object} ErrorResponse
-	// @Router /backups [get]
+	//	@Summary		Получение списка резервных копий
+	//	@Description	Возвращает список доступных резервных копий
+	//	@Tags			Backups
+	//	@Produce		json
+	//	@Security		AdminAuth
+	//	@Success		200	{array}		BackupFileInfo
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Router			/backups [get]
 	subGroup.GET("", api.list, RequireAdminAuth())
 
-	// @Summary Создание резервной копии
-	// @Description Создает новую резервную копию
-	// @Tags Backups
-	// @Accept json
-	// @Param body body BackupCreateRequest true "Данные для создания резервной копии"
-	// @Security AdminAuth
-	// @Success 204 "No Content"
-	// @Failure 400 {object} ErrorResponse
-	// @Router /backups [post]
+	//	@Summary		Создание резервной копии
+	//	@Description	Создает новую резервную копию
+	//	@Tags			Backups
+	//	@Accept			json
+	//	@Param			body	body	BackupCreateRequest	true	"Данные для создания резервной копии"
+	//	@Security		AdminAuth
+	//	@Success		204	"No Content"
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Router			/backups [post]
 	subGroup.POST("", api.create, RequireAdminAuth())
 
-	// @Summary Загрузка резервной копии
-	// @Description Загружает резервную копию по указанному ключу
-	// @Tags Backups
-	// @Param key path string true "Ключ резервной копии"
-	// @Param token query string true "Токен доступа"
-	// @Security AdminAuth
-	// @Success 200 "OK"
-	// @Failure 400 {object} ErrorResponse
-	// @Failure 403 {object} ErrorResponse
-	// @Router /backups/{key} [get]
+	//	@Summary		Загрузка резервной копии
+	//	@Description	Загружает резервную копию по указанному ключу
+	//	@Tags			Backups
+	//	@Param			key		path	string	true	"Ключ резервной копии"
+	//	@Param			token	query	string	true	"Токен доступа"
+	//	@Security		AdminAuth
+	//	@Success		200	"OK"
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Failure		403	{object}	ErrorResponse
+	//	@Router			/backups/{key} [get]
 	subGroup.GET("/:key", api.download)
 
-	// @Summary Удаление резервной копии
-	// @Description Удаляет резервную копию по указанному ключу
-	// @Tags Backups
-	// @Param key path string true "Ключ резервной копии"
-	// @Security AdminAuth
-	// @Success 204 "No Content"
-	// @Failure 400 {object} ErrorResponse
-	// @Router /backups/{key} [delete]
+	//	@Summary		Удаление резервной копии
+	//	@Description	Удаляет резервную копию по указанному ключу
+	//	@Tags			Backups
+	//	@Param			key	path	string	true	"Ключ резервной копии"
+	//	@Security		AdminAuth
+	//	@Success		204	"No Content"
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Router			/backups/{key} [delete]
 	subGroup.DELETE("/:key", api.delete, RequireAdminAuth())
 
-	// @Summary Восстановление резервной копии
-	// @Description Запускает процесс восстановления резервной копии по указанному ключу
-	// @Tags Backups
-	// @Param key path string true "Ключ резервной копии"
-	// @Security AdminAuth
-	// @Success 204 "No Content"
-	// @Failure 400 {object} ErrorResponse
-	// @Router /backups/{key}/restore [post]
+	//	@Summary		Восстановление резервной копии
+	//	@Description	Запускает процесс восстановления резервной копии по указанному ключу
+	//	@Tags			Backups
+	//	@Param			key	path	string	true	"Ключ резервной копии"
+	//	@Security		AdminAuth
+	//	@Success		204	"No Content"
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Router			/backups/{key}/restore [post]
 	subGroup.POST("/:key/restore", api.restore, RequireAdminAuth())
 }
 
@@ -179,7 +179,7 @@ func (api *backupApi) restore(c echo.Context) error {
 		return NewBadRequestError("Try again later - another backup/restore process has already been started.", nil)
 	}
 
-	// @todo remove the extra unescape after https://github.com/labstack/echo/issues/2447
+	//	@todo	remove the extra unescape after https://github.com/labstack/echo/issues/2447
 	key, _ := url.PathUnescape(c.PathParam("key"))
 
 	existsCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

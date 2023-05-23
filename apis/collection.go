@@ -16,80 +16,80 @@ func bindCollectionApi(app core.App, rg *echo.Group) {
 	api := collectionApi{app: app}
 
 	subGroup := rg.Group("/collections", ActivityLogger(app), RequireAdminAuth())
-	// @Summary Получить список коллекций
-	// @Description Возвращает список коллекций с возможностью фильтрации и сортировки
-	// @Tags Collections
-	// @Param id query string false "ID коллекции"
-	// @Param created query string false "Дата создания коллекции в формате ISO8601"
-	// @Param updated query string false "Дата обновления коллекции в формате ISO8601"
-	// @Param name query string false "Название коллекции"
-	// @Param system query boolean false "Системная коллекция"
-	// @Param type query string false "Тип коллекции"
-	// @Security AdminAuth
-	// @Success 200 {object} SearchResult{Collections} "OK"
-	// @Failure 400 {object} ErrorResponse
-	// @Router /collections [get]
+	//	@Summary		Получить список коллекций
+	//	@Description	Возвращает список коллекций с возможностью фильтрации и сортировки
+	//	@Tags			Collections
+	//	@Param			id		query	string	false	"ID коллекции"
+	//	@Param			created	query	string	false	"Дата создания коллекции в формате ISO8601"
+	//	@Param			updated	query	string	false	"Дата обновления коллекции в формате ISO8601"
+	//	@Param			name	query	string	false	"Название коллекции"
+	//	@Param			system	query	boolean	false	"Системная коллекция"
+	//	@Param			type	query	string	false	"Тип коллекции"
+	//	@Security		AdminAuth
+	//	@Success		200	{object}	SearchResult{Collections}	"OK"
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Router			/collections [get]
 	subGroup.GET("", api.list)
 
-	// @Summary Создать коллекцию
-	// @Description Создает новую коллекцию
-	// @Tags Collections
-	// @Accept json
-	// @Produce json
-	// @Param collection body CollectionCreateRequest true "Данные для создания коллекции"
-	// @Security AdminAuth
-	// @Success 200 {object} Collection "OK"
-	// @Failure 400 {object} ErrorResponse
-	// @Router /collections [post]
+	//	@Summary		Создать коллекцию
+	//	@Description	Создает новую коллекцию
+	//	@Tags			Collections
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			collection	body	CollectionCreateRequest	true	"Данные для создания коллекции"
+	//	@Security		AdminAuth
+	//	@Success		200	{object}	Collection	"OK"
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Router			/collections [post]
 	subGroup.POST("", api.create)
 
-	// @Summary Просмотреть коллекцию
-	// @Description Возвращает информацию о коллекции по ее имени или ID
-	// @Tags Collections
-	// @Accept json
-	// @Produce json
-	// @Param collection path string true "Имя или ID коллекции"
-	// @Security AdminAuth
-	// @Success 200 {object} Collection "OK"
-	// @Failure 400 {object} ErrorResponse
-	// @Failure 404 {object} ErrorResponse
-	// @Router /collections/{collection} [get]
+	//	@Summary		Просмотреть коллекцию
+	//	@Description	Возвращает информацию о коллекции по ее имени или ID
+	//	@Tags			Collections
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			collection	path	string	true	"Имя или ID коллекции"
+	//	@Security		AdminAuth
+	//	@Success		200	{object}	Collection	"OK"
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Failure		404	{object}	ErrorResponse
+	//	@Router			/collections/{collection} [get]
 	subGroup.GET("/:collection", api.view)
 
-	// @Summary Обновить коллекцию
-	// @Description Обновляет информацию о коллекции по ее имени или ID
-	// @Tags Collections
-	// @Accept json
-	// @Produce json
-	// @Param collection path string true "Имя или ID коллекции"
-	// @Param body body CollectionUpsertRequest true "Данные для обновления коллекции"
-	// @Security AdminAuth
-	// @Success 200 {object} Collection "OK"
-	// @Failure 400 {object} ErrorResponse
-	// @Failure 404 {object} ErrorResponse
-	// @Router /collections/{collection} [patch]
+	//	@Summary		Обновить коллекцию
+	//	@Description	Обновляет информацию о коллекции по ее имени или ID
+	//	@Tags			Collections
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			collection	path	string					true	"Имя или ID коллекции"
+	//	@Param			body		body	CollectionUpsertRequest	true	"Данные для обновления коллекции"
+	//	@Security		AdminAuth
+	//	@Success		200	{object}	Collection	"OK"
+	//	@Failure		400	{object}	ErrorResponse
+	//	@Failure		404	{object}	ErrorResponse
+	//	@Router			/collections/{collection} [patch]
 	subGroup.PATCH("/:collection", api.update)
 
-	// @Summary Удалить коллекцию
-	// @Description Удаляет коллекцию по ее имени или ID
-	// @Tags Collections
-	// @Param collection path string true "Имя или ID коллекции"
-	// @Security AdminAuth
-	// @Success 204 "No Content"
-	// @Failure 404 {object} ErrorResponse
-	// @Router /collections/{collection} [delete]
+	//	@Summary		Удалить коллекцию
+	//	@Description	Удаляет коллекцию по ее имени или ID
+	//	@Tags			Collections
+	//	@Param			collection	path	string	true	"Имя или ID коллекции"
+	//	@Security		AdminAuth
+	//	@Success		204	"No Content"
+	//	@Failure		404	{object}	ErrorResponse
+	//	@Router			/collections/{collection} [delete]
 	subGroup.DELETE("/:collection", api.delete)
 
-	// @Summary Импортировать коллекции
-	// @Description Импортирует коллекции из переданных данных
-	// @Tags Collections
-	// @Security AdminAuth
-	// @Accept json
-	// @Produce json
-	// @Param body body CollectionsImportRequest true "Данные для импорта коллекций"
-	// @Success 204 "No Content"
-	// @Failure 400 {object} ErrorResponse
-	// @Router /collections/import [post]
+	//	@Summary		Импортировать коллекции
+	//	@Description	Импортирует коллекции из переданных данных
+	//	@Tags			Collections
+	//	@Security		AdminAuth
+	//	@Accept			json
+	//	@Produce		json
+	//	@Param			body	body	CollectionsImportRequest	true	"Данные для импорта коллекций"
+	//	@Success		204		"No Content"
+	//	@Failure		400		{object}	ErrorResponse
+	//	@Router			/collections/import [post]
 	subGroup.PUT("/import", api.bulkImport)
 }
 
