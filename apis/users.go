@@ -55,6 +55,8 @@ func bindUsersApi(app core.App, rg *echo.Group) {
 
 	subGroup := rg.Group("/users", RequireAdminAuth())
 	subGroup.GET("/", api.listUsers)
+	subGroup.GET("/:id", api.getUser)
+	subGroup.DELETE("/:id", api.deleteUser)
 	/*
 		router.Get("/user", middleware.JWTCheck([]string{"admin"}, middleware.IDFromQuery), getUser)
 		router.Post("/user", middleware.JWTCheck([]string{"admin"}, nil), postUser)
@@ -164,6 +166,50 @@ func (api *usersApi) getUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, Data{
 		Data: user,
 	})
+}
+
+// @Summary Delete user
+// @Tags user
+// @Description Delete with id or name
+// @Security ApiKeyAuth
+// @Router /user [delete]
+// @Param id query string false "get by id"
+// @Success 204 "No Content"
+// @failure 400 {object} apimodels.Error{}
+// @failure 404 {object} apimodels.Error{}
+// @failure 500 {object} apimodels.Error{}
+func (api *usersApi) deleteUser(c echo.Context) error {
+	id := c.QueryParam("id")
+
+	if id == "" {
+		return c.JSON(http.StatusBadRequest, Error{
+			Error: models.ErrRequiredIDName.Error(),
+		})
+	}
+
+	reg := registry.Reg().Get(c.Get("registry").(string))
+
+	query := reg.DB.WithContext(c.Request().Context())
+	if id != "" {
+		query = query.Where("id = ?", id)
+	}
+
+	// delete directly in DB
+	result := query.Unscoped().Delete(&models.User{})
+
+	if result.RowsAffected == 0 {
+		return c.JSON(http.StatusNotFound, Error{
+			Error: "not found any related data",
+		})
+	}
+
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, Error{
+			Error: result.Error.Error(),
+		})
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }
 
 type usersApi struct {
