@@ -73,10 +73,9 @@ func bindUsersApi(app core.App, rg *echo.Group) {
 	subGroup.GET("/", api.listUsers)
 	subGroup.GET("/:id", api.getUser)
 	subGroup.DELETE("/:id", api.deleteUser)
-	/*
-		router.Post("/user", middleware.JWTCheck([]string{"admin"}, nil), postUser)
-		router.Patch("/user", middleware.JWTCheck([]string{"admin"}, middleware.IDFromBody), patchUser)
-	*/
+	subGroup.POST("/", api.postUser)
+	subGroup.PATCH("/", api.patchUser)
+
 }
 
 // @Summary List users
