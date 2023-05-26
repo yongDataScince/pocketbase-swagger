@@ -10,7 +10,10 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/registry"
+
 	"golang.org/x/crypto/bcrypt"
+
 	"gorm.io/gorm"
 )
 
@@ -75,7 +78,6 @@ func bindUsersApi(app core.App, rg *echo.Group) {
 	subGroup.DELETE("/:id", api.deleteUser)
 	subGroup.POST("/", api.postUser)
 	subGroup.PATCH("/", api.patchUser)
-
 }
 
 // @Summary List users
@@ -103,8 +105,10 @@ func (api *usersApi) listUsers(c echo.Context) error {
 		})
 	}
 
-	reg := registry.Reg().Get(c.Get("registry").(string))
-
+	reg, err := registry.Get(c.Get("registry").(string))
+	if err != nil {
+		return err
+	}
 	query := reg.DB.WithContext(c.Request().Context()).Model(&models.User{}).Limit(meta.Limit).Offset(meta.Offset)
 
 	if meta.Search != "" {
@@ -155,7 +159,10 @@ func (api *usersApi) getUser(c echo.Context) error {
 
 	user := new(UserDataID)
 
-	reg := registry.Reg().Get(c.Get("registry").(string))
+	reg, err := registry.Get(c.Get("registry").(string))
+	if err != nil {
+		return err
+	}
 
 	query := reg.DB.WithContext(c.Request().Context()).Model(&models.User{})
 	if id != "" {
@@ -200,7 +207,10 @@ func (api *usersApi) deleteUser(c echo.Context) error {
 		})
 	}
 
-	reg := registry.Reg().Get(c.Get("registry").(string))
+	reg, err := registry.Get(c.Get("registry").(string))
+	if err != nil {
+		return err
+	}
 
 	query := reg.DB.WithContext(c.Request().Context())
 	if id != "" {
@@ -264,7 +274,10 @@ func (api *usersApi) postUser(c echo.Context) error {
 		body.Password = string(hashedPassword)
 	}
 
-	reg := registry.Reg().Get(c.Get("registry").(string))
+	reg, err := registry.Get(c.Get("registry").(string))
+	if err != nil {
+		return err
+	}
 
 	id, err := uuid.NewUUID()
 	if err != nil {
@@ -333,7 +346,10 @@ func (api *usersApi) patchUser(c echo.Context) error {
 		body["groups"] = groupsJSON
 	}
 
-	reg := registry.Reg().Get(c.Get("registry").(string))
+	reg, err := registry.Get(c.Get("registry").(string))
+	if err != nil {
+		return err
+	}
 
 	query := reg.DB.WithContext(c.Request().Context()).Model(&models.User{}).Where("id = ?", body["id"])
 

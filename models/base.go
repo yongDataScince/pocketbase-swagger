@@ -47,6 +47,7 @@ type Model interface {
 // -------------------------------------------------------------------
 
 // BaseModel defines common fields and methods used by all other models.
+// swagger:forms BaseModel
 type BaseModel struct {
 	isNotNew bool
 

@@ -33,6 +33,9 @@ require (
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/spec v0.20.9 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
+	github.com/go-sql-driver/mysql v1.7.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/labstack/echo/v4 v4.9.0 // indirect
 	github.com/labstack/gommon v0.3.1 // indirect
@@ -44,6 +47,8 @@ require (
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gorm.io/driver/mysql v1.4.7 // indirect
+	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
@@ -102,6 +107,7 @@ require (
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.55.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
+	gorm.io/datatypes v1.2.0
 	lukechampine.com/uint128 v1.3.0 // indirect
 	modernc.org/cc/v3 v3.40.0 // indirect
 	modernc.org/ccgo/v3 v3.16.13 // indirect

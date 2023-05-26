@@ -12,6 +12,7 @@ import (
 )
 
 // AdminLogin is an admin email/pass login form.
+// swagger:forms AdminLogin
 type AdminLogin struct {
 	app core.App
 	dao *daos.Dao
